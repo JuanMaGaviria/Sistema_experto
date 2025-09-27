@@ -10,7 +10,44 @@ import time
 app = Flask(__name__)
 
 # Base de conocimiento
-
+base_conocimiento = {
+    "centro": {
+        "descripcion": "Centro de la ciudad",
+        "nodos": ["Plaza Central", "Catedral", "Alcaldía", "Banco", "Hospital Central"],
+        "enlaces": [
+            ("Plaza Central", "Catedral", 3),
+            ("Plaza Central", "Alcaldía", 5),
+            ("Catedral", "Banco", 4),
+            ("Alcaldía", "Hospital Central", 6),
+            ("Banco", "Hospital Central", 2),
+            ("Plaza Central", "Hospital Central", 8)
+        ]
+    },
+    "universidad": {
+        "descripcion": "Zona universitaria",
+        "nodos": ["Entrada Principal", "Biblioteca", "Cafetería", "Laboratorios", "Rectoría"],
+        "enlaces": [
+            ("Entrada Principal", "Biblioteca", 4),
+            ("Entrada Principal", "Cafetería", 2),
+            ("Biblioteca", "Laboratorios", 3),
+            ("Cafetería", "Rectoría", 5),
+            ("Laboratorios", "Rectoría", 4),
+            ("Biblioteca", "Rectoría", 6)
+        ]
+    },
+    "aeropuerto": {
+        "descripcion": "Zona aeroportuaria",
+        "nodos": ["Terminal 1", "Terminal 2", "Estacionamiento", "Hotel", "Centro Comercial"],
+        "enlaces": [
+            ("Terminal 1", "Terminal 2", 6),
+            ("Terminal 1", "Estacionamiento", 3),
+            ("Terminal 2", "Hotel", 4),
+            ("Estacionamiento", "Centro Comercial", 5),
+            ("Hotel", "Centro Comercial", 2),
+            ("Terminal 1", "Centro Comercial", 8)
+        ]
+    }
+}
 
 # Motor de inferencia
 
