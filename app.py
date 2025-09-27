@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib
-matplotlib.use('Agg')  # Backend sin GUI
+matplotlib.use('Agg')
 import io
 import base64
 import json
