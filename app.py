@@ -16,7 +16,6 @@ app = Flask(__name__)
 
 
 # Instancia del motor de inferencia
-motor = MotorInferencia()
 
 @app.route('/')
 def index():
