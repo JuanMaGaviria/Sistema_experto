@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <title>Sistema Experto de Transporte Masivo</title>
+    <style>
+        *{
+            font-family: 'Poppins', sans-serif !important;
+        }
+        body {
+            
+            /* max-width: 100px; */
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+
+            padding: 20px;
+
+        }
+
+        .contenedor-map {
+            display: flex;
+
+            /* align-items: center; */
+            flex-direction: row;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .zona-selector {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .zona-option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .zona-option input {
+            margin-right: 10px;
+        }
+
+        .zona-info {
+            max-width: 800px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .ruta-controls {
+            margin: 20px 0;
+            display: none;
+        }
+
+        select {
+            padding: 7px;
+            margin: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .resultado {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .resultado.exito {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .resultado.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .ruta-animacion {
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .paso-actual {
+            font-weight: bold;
+            color: #856404;
+            animation: pulso 1s infinite;
+        }
+
+        @keyframes pulso {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .grafo-info {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .grafo-visual {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .grafo-visual img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .titulos {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .titulos .principal {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .titulos .desc {
+            color: #8d8d8d;
+            text-align: center;
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="titulos">
+            <span class="principal">Sistema experto</span>
+            <span class="desc">Encuentra la ruta más eficiente para tu destino con nuestro sistema inteligente de
+                transporte público</span>
+        </div>
+
+        <div class="contenedor-map">
+
+            <div class="zona-selector">
+                <span>Seleccione su destino</span>
+                {% for zona in zonas %}
+                <label class="zona-option">
+                    <input type="radio" name="zona" value="{{ zona }}" onchange="seleccionarZona('{{ zona }}')">
+                    <strong>{{ zona.title() }}</strong>
+                </label>
+                {% endfor %}
+
+                <div id="ruta-controls" class="ruta-controls">
+                    <h3>Planificar Ruta:</h3>
+                    <select id="origen">
+                        <option value="">Seleccione origen</option>
+                    </select>
+                    <select id="destino">
+                        <option value="">Seleccione destino</option>
+                    </select>
+                    <br>
+                    <button onclick="calcularRuta()" id="btn-calcular">Calcular Ruta Óptima</button>
+                    <button onclick="iniciarRecorrido()" id="btn-iniciar" disabled>Iniciar Recorrido</button>
+                </div>
+                <div id="grafo-info" class="grafo-info"></div>
+            </div>
+
+            <div id="zona-info" class="zona-info">
+                <h4 id="zona-titulo"></h4>
+                <p id="zona-descripcion"></p>
+                <div id="grafo-visual" class="grafo-visual"></div>
+                
+            </div>
+
+        </div>
+
+
+
+
+        <div id="resultado" class="resultado"></div>
+        <div id="ruta-animacion" class="ruta-animacion"></div>
+    </div>
+
+    <script>
+        let zonaActual = null;
+        let rutaActual = null;
+        let recorridoInterval = null;
+
+        async function seleccionarZona(zona) {
+            zonaActual = zona;
+
+            try {
+                const response = await fetch(`/api/grafo/${zona}`);
+                const data = await response.json();
+
+                document.getElementById('zona-info').style.display = 'block';
+                document.getElementById('zona-titulo').textContent = `Zona: ${zona.toUpperCase()}`;
+                document.getElementById('zona-descripcion').textContent = data.descripcion;
+
+                // Mostrar información del grafo
+                let grafoHtml = '<h5>Estaciones disponibles:</h5>';
+                grafoHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">';
+                grafoHtml += '<div><strong>Nodos:</strong><br>';
+                data.nodos.forEach(nodo => {
+                    grafoHtml += `• ${nodo}<br>`;
+                });
+                grafoHtml += '</div><div><strong>Conexiones:</strong><br>';
+                data.enlaces.forEach(([origen, destino, peso]) => {
+                    grafoHtml += `<div class="enlace">${origen} ↔ ${destino} (${peso} min)</div>`;
+                });
+                grafoHtml += '</div></div>';
+
+                document.getElementById('grafo-info').innerHTML = grafoHtml;
+
+                // Mostrar imagen del grafo
+                if (data.imagen) {
+                    document.getElementById('grafo-visual').innerHTML =
+                        `<h5>Visualización del Grafo:</h5><img src="data:image/png;base64,${data.imagen}" alt="Grafo ${zona}">`;
+                }
+
+                // Llenar selectores
+                llenarSelectores(data.nodos);
+                document.getElementById('ruta-controls').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error al cargar zona:', error);
+            }
+        }
+
+        function llenarSelectores(nodos) {
+            const origenSelect = document.getElementById('origen');
+            const destinoSelect = document.getElementById('destino');
+
+            origenSelect.innerHTML = '<option value="">Seleccione origen</option>';
+            destinoSelect.innerHTML = '<option value="">Seleccione destino</option>';
+
+            nodos.forEach(nodo => {
+                origenSelect.innerHTML += `<option value="${nodo}">${nodo}</option>`;
+                destinoSelect.innerHTML += `<option value="${nodo}">${nodo}</option>`;
+            });
+        }
+
+        async function calcularRuta() {
+            const origen = document.getElementById('origen').value;
+            const destino = document.getElementById('destino').value;
+
+            if (!origen || !destino) {
+                mostrarResultado('Por favor seleccione origen y destino', 'error');
+                return;
+            }
+
+            if (origen === destino) {
+                mostrarResultado('El origen y destino no pueden ser iguales', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/ruta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        zona: zonaActual,
+                        origen: origen,
+                        destino: destino
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.exito) {
+                    rutaActual = data.ruta;
+                    mostrarResultado(
+                        `✅ Ruta encontrada: ${data.ruta.join(' → ')}<br>
+                         ⏱️ Tiempo estimado: ${data.distancia} minutos`,
+                        'exito'
+                    );
+                    document.getElementById('btn-iniciar').disabled = false;
+                } else {
+                    mostrarResultado(`❌ ${data.mensaje || 'No se pudo calcular la ruta'}`, 'error');
+                    document.getElementById('btn-iniciar').disabled = true;
+                }
+
+            } catch (error) {
+                mostrarResultado('Error al calcular la ruta', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        function mostrarResultado(mensaje, tipo) {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = mensaje;
+            resultado.className = `resultado ${tipo}`;
+            resultado.style.display = 'block';
+        }
+
+        async function actualizarGrafoConRuta(ruta, nodoActual = null) {
+            try {
+                const params = new URLSearchParams({
+                    ruta: ruta.join(','),
+                    ...(nodoActual && { nodo_actual: nodoActual })
+                });
+
+                const response = await fetch(`/api/grafo/${zonaActual}/ruta?${params}`);
+                const data = await response.json();
+
+                if (data.imagen) {
+                    document.getElementById('grafo-visual').innerHTML =
+                        `<h5>Recorrido en Progreso:</h5><img src="data:image/png;base64,${data.imagen}" alt="Grafo con ruta">`;
+                }
+            } catch (error) {
+                console.error('Error al actualizar grafo:', error);
+            }
+        }
+
+        function iniciarRecorrido() {
+            if (!rutaActual || rutaActual.length < 2) return;
+
+            const animacionDiv = document.getElementById('ruta-animacion');
+            animacionDiv.style.display = 'block';
+            animacionDiv.innerHTML = '<h4>🚌 Recorrido en progreso...</h4><div id="paso-actual"></div>';
+
+            document.getElementById('btn-iniciar').disabled = true;
+            document.getElementById('btn-calcular').disabled = true;
+
+            let pasoActual = 0;
+
+            recorridoInterval = setInterval(async () => {
+                if (pasoActual < rutaActual.length) {
+                    const estacionActual = rutaActual[pasoActual];
+                    let mensaje = '';
+
+                    if (pasoActual === 0) {
+                        mensaje = `🚏 Iniciando en: <span class="paso-actual">${estacionActual}</span>`;
+                    } else if (pasoActual === rutaActual.length - 1) {
+                        mensaje = `🎯 ¡Llegada al destino!: <span class="paso-actual">${estacionActual}</span>`;
+                    } else {
+                        mensaje = `🚶‍♂️ Pasando por: <span class="paso-actual">${estacionActual}</span>`;
+                    }
+
+                    document.getElementById('paso-actual').innerHTML = mensaje;
+
+                    // Actualizar grafo visual con nodo actual
+                    await actualizarGrafoConRuta(rutaActual, estacionActual);
+
+                    pasoActual++;
+                } else {
+                    clearInterval(recorridoInterval);
+                    setTimeout(() => {
+                        animacionDiv.innerHTML = '<h4 style="color: green;">✅ ¡Recorrido completado exitosamente!</h4>';
+                        document.getElementById('btn-iniciar').disabled = false;
+                        document.getElementById('btn-calcular').disabled = false;
+                    }, 1000);
+                }
+            }, 3000);
+        }
+
+        // Limpiar interval al salir
+        window.addEventListener('beforeunload', () => {
+            if (recorridoInterval) {
+                clearInterval(recorridoInterval);
+            }
+        });
+    </script>
+</body>
+
+</html>
